@@ -38,6 +38,19 @@ LOCAL_MODULE := android.hardware.gnss@1.0-service.exynos4
 LOCAL_INIT_RC := android.hardware.gnss@1.0-service.rc
 LOCAL_SRC_FILES := \
     service.cpp \
+    ThreadCreationWrapper.cpp \
+    AGnss.cpp \
+    AGnssRil.cpp \
+    Gnss.cpp \
+    GnssBatching.cpp \
+    GnssDebug.cpp \
+    GnssGeofencing.cpp \
+    GnssMeasurement.cpp \
+    GnssNavigationMessage.cpp \
+    GnssNi.cpp \
+    GnssXtra.cpp \
+    GnssConfiguration.cpp \
+    GnssUtils.cpp
 
 LOCAL_SHARED_LIBRARIES := \
     liblog \
