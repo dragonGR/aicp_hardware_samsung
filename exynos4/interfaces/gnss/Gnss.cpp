@@ -18,13 +18,6 @@
 
 #include "Gnss.h"
 #include <GnssUtils.h>
-#include <dlfcn.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
-#define LEGACY_GPS_PATH "/vendor/lib/hw/gps.exynos4.so"
 
 namespace android {
 namespace hardware {
@@ -746,22 +739,7 @@ void Gnss::handleHidlDeath() {
 IGnss* HIDL_FETCH_IGnss(const char* /* hal */) {
     hw_module_t* module;
     IGnss* iface = nullptr;
-    void *legacyGpsLib;
-    int err = 0;
-
-    legacyGpsLib = dlopen(LEGACY_GPS_PATH, RTLD_LOCAL);
-    if (!legacyGpsLib) {
-	ALOGE("Failed to load real GPS HAL '" LEGACY_GPS_PATH "': %s", dlerror());
-	err = -1;
-    }
-
-    if (err == 0) {
-        module = (struct hw_module_t*)dlsym(legacyGpsLib, HAL_MODULE_INFO_SYM_AS_STR);
-        if (!module) {
-            ALOGE("Failed to locate the GPS HAL module sym: '" HAL_MODULE_INFO_SYM_AS_STR "': %s", dlerror());
-            return iface;
-        }
-    }
+    int err = hw_get_module(GPS_HARDWARE_MODULE_ID, (hw_module_t const**)&module);
 
     if (err == 0) {
         hw_device_t* device;
