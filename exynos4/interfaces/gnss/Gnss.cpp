@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define LEGACY_GPS_PATH "/vendor/lib/hw/gps.exynos4.so"
+
 namespace android {
 namespace hardware {
 namespace gnss {
@@ -740,6 +742,41 @@ void Gnss::handleHidlDeath() {
      */
     sGnssCbIface = nullptr;
 }
+
+IGnss* HIDL_FETCH_IGnss(const char* /* hal */) {
+    hw_module_t* module;
+    IGnss* iface = nullptr;
+    void *legacyGpsLib;
+    int err = 0;
+
+    legacyGpsLib = dlopen(LEGACY_GPS_PATH, RTLD_LOCAL);
+    if (!legacyGpsLib) {
+	ALOGE("Failed to load real GPS HAL '" LEGACY_GPS_PATH "': %s", dlerror());
+	err = -1;
+    }
+
+    if (err == 0) {
+        module = (struct hw_module_t*)dlsym(legacyGpsLib, HAL_MODULE_INFO_SYM_AS_STR);
+        if (!module) {
+            ALOGE("Failed to locate the GPS HAL module sym: '" HAL_MODULE_INFO_SYM_AS_STR "': %s", dlerror());
+            return iface;
+        }
+    }
+
+    if (err == 0) {
+        hw_device_t* device;
+        err = module->methods->open(module, GPS_HARDWARE_MODULE_ID, &device);
+        if (err == 0) {
+            iface = new Gnss(reinterpret_cast<gps_device_t*>(device));
+        } else {
+            ALOGE("gnssDevice open %s failed: %d", GPS_HARDWARE_MODULE_ID, err);
+        }
+    } else {
+      ALOGE("gnss hw_get_module %s failed: %d", GPS_HARDWARE_MODULE_ID, err);
+    }
+    return iface;
+}
+
 }  // namespace implementation
 }  // namespace V1_0
 }  // namespace gnss
